@@ -1,0 +1,109 @@
+body {
+    background: #cab7a7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#field {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    height: 744px;
+    width: 745px;
+    background-image: url('../img/first-field.png');
+    z-index: 0;
+}
+
+#frame {
+    position: absolute;
+    margin: 0;
+    padding: 0;
+    height: 744px;
+    width: 745px;
+    background-image: url('../img/frame.png');    
+}
+
+#rframe {
+    position: absolute;
+    margin: 0;
+    padding: 0;
+    height: 744px;
+    width: 15px;
+    background-image: url('../img/r-frame.png');    
+}
+
+#tframe {
+    position: absolute;
+    margin: 0;
+    padding: 0;
+    height: 15px;
+    width: 745px;
+    background-image: url('../img/t-frame.png');    
+}
+
+#lframe {
+    position: absolute;
+    left: 730px;
+    margin: 0;
+    padding: 0;
+    height: 744px;
+    width: 15px;
+    background-image: url('../img/l-frame.png');    
+}
+
+#bframe {
+    position: absolute;
+    top: 729px;
+    margin: 0;
+    padding: 0;
+    height: 15px;
+    width: 745px;
+    background-image: url('../img/b-frame.png');    
+}
+
+.cell {
+    cursor: pointer;
+}
+
+.cell-choice {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.cell-chosen {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.cell-error {
+    background: rgba(255, 22, 2, 0.3);
+}
+
+.cell-sea {
+    background: #12b7a7;
+    background-image: url('../img/sea.png');
+}
+
+.cell-village {
+    background: #12b7a7;
+    background-image: url('../img/village.png');
+}
+
+.cell-monster {
+    background: #12b7a7;
+    background-image: url('../img/monster.png');
+}
+
+.cell-field {
+    background: #12b7a7;
+    background-image: url('../img/field.png');
+}
+
+.cell-forest {
+    background: #12b7a7;
+    background-image: url('../img/forest.png');
+}
+
+.cell-mountain {
+    background: #12b7a7;
+    background-image: url('../img/mountain.png');
+}
