@@ -2,7 +2,62 @@ body {
     background: #cab7a7;
     display: flex;
     align-items: center;
+    justify-content: space-around;
+}
+
+#left-panel {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    height: 745px;
+    width: 300px;
+    background-color: #EDD;
+    
+}
+
+#current-figure {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    width: 195px;
+    height: 195px;
+    top: 100px;
+
+}
+
+#rigth-panel {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    height: 745px;
+    width: 450px;
+    background-color: #EDD;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.opponent {
+    height: 220px;
+    width: 400px;
+    background-color: #cbd;
+    display: flex;
     justify-content: center;
+    align-items: center;
+}
+
+.opponent .opponentfield {
+    height: 200px;
+    width: 200px;
+    background-image: url('../img/opponent-field.png');
+    background-size: 200px 200px;
+
+}
+
+.opponent .opponentinfo {
+    height: 200px;
+    width: 150px;
 }
 
 #field {
