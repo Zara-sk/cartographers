@@ -1,0 +1,24 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подготовка к игре...</title>
+    <link rel="stylesheet" href="/css/await.css">
+</head>
+<body>
+    <div class="main-block">
+        <p class="title">КАРТОГРАФЫ</p>
+        <div id="awaiter">
+            <form onsubmit="return false" id="name-block">
+                <input id="nickname" type="text" pattern="[A-Za-z] {,15}" placeholder="Ваш никнейм" maxlength="20">
+                <input id="submit" type="submit" value="ПОДТВЕРДИТЬ">
+            </form>
+            <div id="counter"></div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+    <script type="text/javascript" src="js/await.js"></script>
+</body>
+</html>

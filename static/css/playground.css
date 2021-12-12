@@ -31,7 +31,7 @@ body {
     padding: 0;
     height: 745px;
     width: 450px;
-    background-color: #EDD;
+    /*background-color: #EDD;*/
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -39,25 +39,30 @@ body {
 }
 
 .opponent {
-    height: 220px;
+    height: 600px;
     width: 400px;
-    background-color: #cbd;
+    /*background-color: #cbd;*/
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
 }
 
 .opponent .opponentfield {
-    height: 200px;
-    width: 200px;
+    height: 350px;
+    width: 350px;
     background-image: url('../img/opponent-field.png');
-    background-size: 200px 200px;
+    background-size: 350px 350px;
 
 }
 
 .opponent .opponentinfo {
     height: 200px;
     width: 150px;
+    font-family: sans-serif;
+    font-size: 25px;
+    text-align: center;
+    padding: 15px;
 }
 
 #field {

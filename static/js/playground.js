@@ -1,3 +1,5 @@
+const socket = io()
+
 const play_field = document.querySelector('#field')
 const current_figure = document.querySelector('#current-figure')
 
@@ -209,6 +211,8 @@ function draw_figure(figure, cell, cell_type) {
     //     throw Error
     // }
 
+    socket.emit('lego', {})
+
     try {
         if (!valid_figure_location) {
             cell_type = ERROR_CELL_TYPE
@@ -252,3 +256,10 @@ function clear_figure(figure, cell) {
         }
     }
 }
+
+
+
+socket.on('msg', (data) => {
+    console.log(data)
+    document.title = data
+})
