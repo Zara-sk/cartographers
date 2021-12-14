@@ -6,12 +6,21 @@ submitObj = document.querySelector('#submit')
 form = document.querySelector('#name-block')
 awaiter = document.querySelector('#awaiter')
 
-socket.on('changeUsersCount', (newCount) => {
-    counterObj.innerHTML = 'Картографы: ' + newCount + ' / 2'
+socket.on('actualInfo', (data) => {
+    console.log(data)
+    if (data.status == 'ready') {
+        awaiter.style.opacity = 1
+        counterObj.innerHTML = 'Картографы: ' + data.count + ' / 2'
+    }
+    else if (data.status == 'in_queue') {
+        awaiter.style.opacity = 0
+        counterObj.innerHTML = 'Слишком много картографов =(<br>Подождите, вдруг, кто-то испугается и сбежит...'
+    }
 })
 
-socket.on('checkNickname', (data) => {
-    if (data.result) {
+socket.on('approveName', (result) => {
+    console.log(result)
+    if (result) {
         nickObj.readOnly = true
         submitObj.style.opacity = 0
         setTimeout(() => {
@@ -24,12 +33,13 @@ socket.on('checkNickname', (data) => {
     }
 })
 
-socket.on('tooMuchAwaiters', (data) => {
-    awaiter.innerHTML = 'Слишком много картографов =(<br>Попробуйте перезагрузить страничку. Вдруг, кто-то забоялся'
+socket.on('go', (data) => {
+    document.location.href = document.location.href + 'game' + '?key=' + data.key + '&' + '&name=' + data.name
 })
 
-socket.on('countdown', (countDown) => {
-    counterObj.innerHTML = 'Начало через ' + countDown
+socket.on('countdown', (number) => {
+    console.log(number)
+    counterObj.innerHTML = 'Начало через ' + number
 })
 
 
@@ -46,10 +56,8 @@ $('#nickname').keypress((e) => {
 });
 
 form.addEventListener('submit', (e) => {
-
     if (nickObj.value) {
-        socket.emit('checkNickname', {
-            nickname: nickObj.value
-        })
+    console.log('event')
+        socket.emit('approveName', nickObj.value)
     }
 })

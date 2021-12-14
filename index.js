@@ -5,8 +5,20 @@ const http = require('http').createServer(app)
 const io = require('socket.io')(http)
 
 
+
+// А можно было придумать костыль хуже? #9
+// udp неужели убрал?...
+// const awaiterhtml = '<form onsubmit="return false" id="name-block"> \
+//                 <input id="nickname" type="text" pattern="[A-Za-z] {,15}" placeholder="Ваш никнейм" maxlength="20"> \
+//                 <input id="submit" type="submit" value="ПОДТВЕРДИТЬ"> \
+//             </form> \
+//             <div id="counter"></div>'
+
+
+
 // looks like костыль #6
 var awaiters = []
+var awaiters_queue = []
 
 var players = []
 var lastPlayerID = 1
@@ -15,7 +27,7 @@ var lastPlayerID = 1
 // 0 - ожидание игроков
 // 1 - загрузка игры, инициализация (10 секунд)
 // 2 - игра
-var GAME_PHASE = 0
+var GAME_PARAMS = {phase: 0}
 
 // регулярочки
 name_test = new RegExp('^[A-Za-z ]{3,20}$')
@@ -34,6 +46,12 @@ class Awaiter {
             if (el.socketID == socketID)
             {
                 awaiters.splice(i, 1)
+                var awaiter = awaiters_queue.shift()
+                if (awaiter) {
+                    awaiters.push(awaiter)
+                    changeAwaitersCount()
+                    io.to(awaiter.socketID).emit('awaiterfromqueue', {})
+                }
             }
             i += 1
         })
@@ -66,15 +84,20 @@ app.get('/', (req, res) => {
 
 io.on('connection', (socket) => {
 
-    if (GAME_PHASE == 0) {
+    console.log('+ ' + socket.id)
+    socket.emit('showsocketid', socket.id)
+
+    if (GAME_PARAMS.phase == 0) {
         if (awaiters.length < 2) {
             awaiters.push(new Awaiter(socket.id))
             changeAwaitersCount()
         }
         else {
+            awaiters_queue.push(new Awaiter(socket.id))
             socket.emit('tooMuchAwaiters', {})
         }
         socket.on('disconnect', () => {
+            console.log('- ' + socket.id)
             Awaiter.delete(socket.id)
             changeAwaitersCount()
         })
@@ -83,24 +106,34 @@ io.on('connection', (socket) => {
         socket.on('checkNickname', (data) => {
 
             var test = name_test.test(data.nickname)
-            socket.emit('checkNickname', {result: test})
+
             if (test) {
+                console.log(data.nickname)
                 awaiters.forEach((el) => {
+                    console.log(el.socketID)
+                    if (el.name == data.nickname) test = false;
+
                     if (el.socketID == socket.id) {
-                        el.name = data.nickname
+                        console.log('emit')
+                        if (test) {
+                            el.name = data.nickname
+                        }
+                        socket.emit('checkNickname', {result: test})
                     }
                 })
             }
 
             if (Awaiter.true_awaiters_count() == 2) {
                 // Если есть 2 ждуна и они указали имена, начинаем
-                Countdown(10)
+                GAME_PARAMS.phase = 1
+                Countdown(5)
+
             }
         })
     }
 
 
-    if (GAME_PHASE == 1) {
+    if (GAME_PARAMS.phase == 2) {
         players.push(new Player(socket.id))
 
     }
@@ -121,6 +154,10 @@ function Countdown(countDown) {
             }
         }, 1000)
     }
+    else {
+        GAME_PARAMS.phase = 0
+        changeAwaitersCount()
+    }
 }
 
 function startGame() {
@@ -129,6 +166,7 @@ function startGame() {
 
 function changeAwaitersCount() {
     var count = awaiters.length
+    console.log(count)
     io.emit('changeUsersCount', count)
 }
 

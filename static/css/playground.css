@@ -1,3 +1,9 @@
+@font-face {
+    font-family: 'etna';
+    src: url('../fonts/etna.otf');
+}
+
+
 body {
     background: #cab7a7;
     display: flex;
@@ -9,10 +15,42 @@ body {
     position: relative;
     margin: 0;
     padding: 0;
-    height: 745px;
+    height: 505px;
     width: 300px;
-    background-color: #EDD;
+    /*background-color: #EDD;*/
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
     
+}
+
+#current-figure-text {
+    top: 50px;
+    font-family: 'etna';
+    font-size: 40px;
+    margin-bottom: -20px;
+    padding: 0;
+}
+
+#current-figure-help {
+    position: absolute;
+    text-align: center;
+    top: 100px;
+    font-family: 'etna';
+    font-size: 20px;
+    margin: 0;
+    padding: 0;
+}
+
+#score {
+    position: absolute;
+    text-align: center;
+    top: 390px;
+    font-family: 'etna';
+    font-size: 30px;
+    margin: 0;
+    padding: 0;
 }
 
 #current-figure {
@@ -22,7 +60,8 @@ body {
     width: 195px;
     height: 195px;
     top: 100px;
-
+    border: 5px solid;
+    border-color: #411;
 }
 
 #rigth-panel {
@@ -48,21 +87,22 @@ body {
     align-items: center;
 }
 
-.opponent .opponentfield {
-    height: 350px;
-    width: 350px;
+.opponent #opponentfield {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    height: 363px;
+    width: 363px;
     background-image: url('../img/opponent-field.png');
-    background-size: 350px 350px;
+    background-size: 363px 363px;
 
 }
 
-.opponent .opponentinfo {
-    height: 200px;
-    width: 150px;
-    font-family: sans-serif;
-    font-size: 25px;
+#op, #opname, #opscore {
+    font-family: 'etna';
+    font-size: 35px;
     text-align: center;
-    padding: 15px;
+    padding: 20px;
 }
 
 #field {
@@ -126,6 +166,27 @@ body {
     cursor: pointer;
 }
 
+.c_cell {
+    margin: 0;
+    padding: 0;
+    cursor: default;
+    outline: 2px solid #411;
+/*    border: 3px solid;
+    border-color: #411;*/
+}
+
+.o_cell {
+    top: 0;
+    left: 0;
+    position: absolute;
+    margin: 0;
+    padding: 0;
+    cursor: default;
+    /*outline: 1px solid #411;*/
+/*    border: 3px solid;
+    border-color: #411;*/
+}
+
 .cell-choice {
     background: rgba(255, 255, 255, 0.2);
 }
@@ -141,29 +202,35 @@ body {
 .cell-sea {
     background: #12b7a7;
     background-image: url('../img/sea.png');
+    background-size: 100% 100%;
 }
 
 .cell-village {
     background: #12b7a7;
     background-image: url('../img/village.png');
+    background-size: 100% 100%;
 }
 
 .cell-monster {
     background: #12b7a7;
     background-image: url('../img/monster.png');
+    background-size: 100% 100%;
 }
 
 .cell-field {
     background: #12b7a7;
     background-image: url('../img/field.png');
+    background-size: 100% 100%;
 }
 
 .cell-forest {
     background: #12b7a7;
     background-image: url('../img/forest.png');
+    background-size: 100% 100%;
 }
 
 .cell-mountain {
     background: #12b7a7;
     background-image: url('../img/mountain.png');
+    background-size: 100% 100%;
 }

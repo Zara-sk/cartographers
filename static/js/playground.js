@@ -1,6 +1,10 @@
 const socket = io()
 
 const play_field = document.querySelector('#field')
+const opponent_field = document.querySelector('#opponentfield')
+const score = document.querySelector('#score')
+const opponent_score = document.querySelector('#opscore')
+const opponent_name = document.querySelector('#opname')
 const current_figure = document.querySelector('#current-figure')
 
 const VILLAGE_CELL_TYPE  = "cell-village"
@@ -23,7 +27,37 @@ const ANGLE_FIGURE_TYPE  = [[-1, 0], [0, -1]]
 const LINE_FIGURE_TYPE   = []
 const SQUARE_FIGURE_TYPE = [[-1, 0], [-1, -1], [0, -1]]
 
+var SCHOSEN = {figure: [], cell: []}
+SCHOSEN.figure = ANGLE_FIGURE_TYPE
+SCHOSEN.cell = SEA_CELL_TYPE
 
+var args = document.location.href.split('?')[1].split('&&')
+var key = args[0].split('=')[1]
+var name = args[1].split('=')[1]
+
+socket.emit('connectme', name)
+
+socket.on('startinfo', (data) => {
+    opponent_name.innerHTML = data.name
+    opponent_score.innerHTML = "Счет: 0"
+    score.innerHTML = "Счет: 0"
+})
+
+socket.on('draw', (data) => {
+    draw_figure(data.figure, data.cell, data.cell_type, false)
+})
+
+socket.on('clear', (data) => {
+    clear_figure(data.figure, data.cell, false)
+})
+
+socket.on('upscore', (newscore) => {
+    score.innerHTML = 'Счет: ' + newscore
+})
+
+socket.on('upopscore', (data) => {
+    opponent_score.innerHTML = 'Счет: ' + data.score
+})
 
 $(document).ready(() => {
 
@@ -65,6 +99,7 @@ $(document).ready(() => {
             var new_cell = document.createElement("div")
 
             new_cell.classList.add("cell")
+            new_cell.classList.add("f_cell")
             new_cell.style.height = 65
             new_cell.style.width = 65
 
@@ -79,12 +114,38 @@ $(document).ready(() => {
         }
     };
 
+    // Создаем поле соперника (будем подглядывать)
+    for (var i = 0; i < 11; i++) {
+        for (var j = 0; j < 11; j++) {
+
+            var x_pos = 5.5 + i*32
+            var y_pos = 5.5 + j*32
+
+            var new_cell = document.createElement("div")
+
+            new_cell.classList.add("cell")
+            new_cell.classList.add("o_cell")
+            new_cell.style.height = 32
+            new_cell.style.width = 32
+
+            new_cell.style.left = x_pos
+            new_cell.style.top = y_pos
+            new_cell.id = 'o' + i + '_' + j
+
+            new_cell.style.position = "absolute"
+            new_cell.style["z-index"] = 1
+
+            opponent_field.appendChild(new_cell)
+        }
+    };
+
     // Создание поля для текущей фигуры
     for (var i = 0; i < 3; i++) {
         for (var j = 0; j < 3; j++) {
 
             var new_cell = document.createElement("div")
             new_cell.classList.add("cell")
+            new_cell.classList.add("c_cell")
 
             new_cell.style.height = 65
             new_cell.style.width = 65
@@ -104,34 +165,52 @@ $(document).ready(() => {
     document.querySelector('#c2_8').classList.add(MOUNTAIN_CELL_TYPE)
     document.querySelector('#c5_5').classList.add(MOUNTAIN_CELL_TYPE)
     document.querySelector('#c7_9').classList.add(MOUNTAIN_CELL_TYPE)
+
+    document.querySelector("#o3_1").classList.add(MOUNTAIN_CELL_TYPE)
+    document.querySelector('#o8_2').classList.add(MOUNTAIN_CELL_TYPE)
+    document.querySelector('#o2_8').classList.add(MOUNTAIN_CELL_TYPE)
+    document.querySelector('#o5_5').classList.add(MOUNTAIN_CELL_TYPE)
+    document.querySelector('#o7_9').classList.add(MOUNTAIN_CELL_TYPE)
 })
+
 
 $(document).ready(function(){
 
-    var CHOSEN_FIGURE = SQUARE_FIGURE_TYPE
-    var CHOSEN_CELL   = MONSTER_CELL_TYPE
+    draw_current_figure()
 
-    draw_current_figure(CHOSEN_FIGURE, CHOSEN_CELL)
-
-    $('.cell').hover(
+    $('.f_cell').hover(
         function() {
             var id = $( this )[0].id
-            draw_figure(CHOSEN_FIGURE, parseID(id), CHOICE_CELL_TYPE)
+            draw_figure(SCHOSEN.figure, parseID(id), CHOICE_CELL_TYPE, true)
 
         }, function() {
             var id = $( this )[0].id
-            clear_figure(CHOSEN_FIGURE, parseID(id))
+            clear_figure(SCHOSEN.figure, parseID(id), true)
         }
     )
 
-    $('.cell').click(
+    $('.f_cell').click(
         function() {
             var id = $( this )[0].id
-            draw_figure(CHOSEN_FIGURE, parseID(id), CHOSEN_CELL)
+            draw_figure(SCHOSEN.figure, parseID(id), SCHOSEN.cell, true)
         }
     );
 });
 
+// Линал конечно хорошо, но...
+function rotateFigure(figure) {
+    // Может пора изменить "картографы" на "инвалид, что чудом ходит"?...
+    var new_figure = []
+    if (containsCell(figure, [ 1,  1])) { new_figure.push([-1,  1]) }
+    if (containsCell(figure, [ 0,  1])) { new_figure.push([-1,  0]) }
+    if (containsCell(figure, [-1,  1])) { new_figure.push([-1, -1]) }
+    if (containsCell(figure, [-1,  0])) { new_figure.push([ 0, -1]) }
+    if (containsCell(figure, [-1, -1])) { new_figure.push([ 1, -1]) }
+    if (containsCell(figure, [ 0, -1])) { new_figure.push([ 1,  0]) }
+    if (containsCell(figure, [ 1, -1])) { new_figure.push([ 1,  1]) }
+    if (containsCell(figure, [ 1,  0])) { new_figure.push([ 0,  1]) }
+    return new_figure
+}
 
 function strID(id, field) {return field + id[0] + '_' + id[1]}
 
@@ -139,6 +218,13 @@ function parseID(str) {
     var str_id = str.split('c')[1].split('_')
     var id = [parseInt(str_id[0]), parseInt(str_id[1])]
     return id
+}
+
+function containsCell(arr, cell) {
+    for (var i = 0; i < arr.length; i++) {
+        if (arr[i][0] == cell[0] && arr[i][1] == cell[1]) { return true }
+    }
+    return false
 }
 
 function contains(arr, elem) {
@@ -159,14 +245,14 @@ function parseFigureOnField(figure, cell) {
 // Проверка на то, что ни один элемент
 // фигуры не лежит на другом и не заходит
 // за край карты
-function figure_check(figure) {
+function figure_check(figure, where) {
     for(cell_index in figure) {
 
         cell = figure[cell_index]
         if ((0 > cell[0]) || (cell[0] > 10) || (0 > cell[1]) || (cell[1] > 10)) {
             return false
         }
-        cell_id = '#' + strID(cell, 'c')
+        cell_id = '#' + strID(cell, where)
         cell_class_list = document.querySelector(cell_id).classList
         for (cell_type_index in APROVED_CELL_TYPES) {
             if (cell_class_list.contains(APROVED_CELL_TYPES[cell_type_index])) {
@@ -179,39 +265,30 @@ function figure_check(figure) {
 
 
 // Рисует текущую фигуру
-function draw_current_figure(figure, cell_type) {
-    var abs_figure = parseFigureOnField(figure, [1, 1])
+function draw_current_figure() {
+    clear_current_figure()
+    var abs_figure = parseFigureOnField(SCHOSEN.figure, [1, 1])
     abs_figure.push([1, 1])
     for (figure_cell_index in abs_figure) {
 
         figure_cell = abs_figure[figure_cell_index]
         figure_cell_id = '#' + strID(figure_cell, 'f')
 
-        document.querySelector('#' + strID(figure_cell, 'f')).classList.add(cell_type)
+        document.querySelector('#' + strID(figure_cell, 'f')).classList.add(SCHOSEN.cell)
     }
 
 }
 
 // Рисует фигуру figure (относительно координат cell) 
-function draw_figure(figure, cell, cell_type) {
+function draw_figure(figure, cell, cell_type, flag) {
 
     var abs_figure = parseFigureOnField(figure, cell)
     abs_figure.push(cell)
-    valid_figure_location = figure_check(abs_figure)
 
-    // if (contains(APROVED_CELL_TYPES, cell_type) != -1) {
+    var where = 'c'
+    if (!flag) {where = 'o'}
 
-    // }
-
-    // else if (contains(HELP_CELL_TYPES, cell_type) != -1) {
-
-    // }
-
-    // else {
-    //     throw Error
-    // }
-
-    socket.emit('lego', {})
+    valid_figure_location = figure_check(abs_figure, where)
 
     try {
         if (!valid_figure_location) {
@@ -220,11 +297,22 @@ function draw_figure(figure, cell, cell_type) {
         for (figure_cell_index in abs_figure) {
 
             figure_cell = abs_figure[figure_cell_index]
-            figure_cell_id = '#' + strID(figure_cell, 'c')
 
-            document.querySelector('#' + strID(figure_cell, 'c')).classList.add(cell_type)
+            figure_cell_id = '#' + strID(figure_cell, where)
+
+            document.querySelector(figure_cell_id).classList.add(cell_type)
         }
-        
+        if (flag) {
+            socket.emit('recent', {
+                event: 'draw',
+                figure: figure,
+                cell: cell,
+                cell_type: cell_type
+            })
+            if (contains(APROVED_CELL_TYPES, cell_type)) {
+                socket.emit('upscore', { number: abs_figure.length })
+            }
+        }
     }
     catch {
         for (figure_cell_index in abs_figure) {
@@ -232,15 +320,24 @@ function draw_figure(figure, cell, cell_type) {
             figure_cell = abs_figure[figure_cell_index]
 
             if (0 <= figure_cell[0] && figure_cell[0] <= 10 && 0 <= figure_cell[1] && figure_cell[1] <= 10) {
-                document.querySelector('#' + strID(figure_cell, 'c')).classList.add(ERROR_CELL_TYPE)
+                document.querySelector('#' + strID(figure_cell, where)).classList.add(ERROR_CELL_TYPE)
             }
         }
+        if (flag) {
+            socket.emit('recent', {
+                event: 'draw',
+                figure: figure,
+                cell: cell,
+                cell_type: ERROR_CELL_TYPE
+            })
+        }
     }
+
 }
 
 
 // Очистка клеток от служебных закрасок (допустимо/выбрано/ошибка)
-function clear_figure(figure, cell) {
+function clear_figure(figure, cell, flag) {
 
     var abs_figure = parseFigureOnField(figure, cell)
     abs_figure.push(cell)
@@ -248,16 +345,50 @@ function clear_figure(figure, cell) {
     for (figure_cell_index in abs_figure) {
 
         figure_cell = abs_figure[figure_cell_index]
-
+        var where = 'c'
+        if (!flag) { where = 'o'}
         if (0 <= figure_cell[0] && figure_cell[0] <= 10 && 0 <= figure_cell[1] && figure_cell[1] <= 10) {
-            document.querySelector('#' + strID(figure_cell, 'c')).classList.remove('cell-choice')
-            document.querySelector('#' + strID(figure_cell, 'c')).classList.remove('cell-chosen')
-            document.querySelector('#' + strID(figure_cell, 'c')).classList.remove(ERROR_CELL_TYPE)
+            document.querySelector('#' + strID(figure_cell, where)).classList.remove('cell-choice')
+            document.querySelector('#' + strID(figure_cell, where)).classList.remove('cell-chosen')
+            document.querySelector('#' + strID(figure_cell, where)).classList.remove(ERROR_CELL_TYPE)
+        }
+    }
+    if (flag) {
+        socket.emit('recent', {
+            event: 'clear',
+            figure: figure,
+            cell: cell
+        })
+    }
+}
+
+function clear_current_figure() {
+    for (var i = 0; i <= 2; i++) {
+        for (var j = 0; j <= 2; j++) {
+            removeClasses(document.querySelector('#f' + i + '_' + j))
         }
     }
 }
 
+function removeClasses(obj) {
+    APROVED_CELL_TYPES.forEach((el) => {
+        obj.classList.remove(el)
+    })
+}
 
+document.addEventListener('wheel', (e) => {
+    var x = event.clientX, y = event.clientY, cell_obj = document.elementFromPoint(x, y);
+    if (cell_obj.classList.contains('cell')) {
+        cell = parseID(cell_obj.id)
+        clear_figure(SCHOSEN.figure, cell, true)
+    }
+    SCHOSEN.figure = rotateFigure(SCHOSEN.figure)
+    if (cell_obj.classList.contains('cell')) {
+        cell = parseID(cell_obj.id)
+        draw_figure(SCHOSEN.figure, cell, CHOICE_CELL_TYPE, true)
+    }
+    draw_current_figure()
+})
 
 socket.on('msg', (data) => {
     console.log(data)
