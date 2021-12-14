@@ -21,15 +21,16 @@ const ERROR_CELL_TYPE  = "cell-error"
 const HELP_CELL_TYPES  = [CHOICE_CELL_TYPE, CHOSEN_CELL_TYPE, ERROR_CELL_TYPE]
 
 
-const POINT_FIGURE_TYPE    = []
+const POINT_FIGURE_TYPE  = []
 const CROSS_FIGURE_TYPE  = [[-1, 0], [1, 0], [0, -1], [0, 1]]
 const ANGLE_FIGURE_TYPE  = [[-1, 0], [0, -1]]
-const LINE_FIGURE_TYPE   = []
+const LINE_FIGURE_TYPE   = [[-1, 0], [1, 0]]
 const SQUARE_FIGURE_TYPE = [[-1, 0], [-1, -1], [0, -1]]
+const ALL_FIGURES = [POINT_FIGURE_TYPE, CROSS_FIGURE_TYPE, ANGLE_FIGURE_TYPE, LINE_FIGURE_TYPE, SQUARE_FIGURE_TYPE]
 
 var SCHOSEN = {figure: [], cell: []}
-SCHOSEN.figure = ANGLE_FIGURE_TYPE
-SCHOSEN.cell = SEA_CELL_TYPE
+SCHOSEN.figure = null
+SCHOSEN.cell = null
 
 var args = document.location.href.split('?')[1].split('&&')
 var key = args[0].split('=')[1]
@@ -57,6 +58,24 @@ socket.on('upscore', (newscore) => {
 
 socket.on('upopscore', (data) => {
     opponent_score.innerHTML = 'Счет: ' + data.score
+})
+
+socket.on('endgame', (result) => {
+    if (result.result == 'draw') {
+        document.body.innerHTML = 'Ничья!'
+    }
+    else {
+        document.body.innerHTML = 'Победу одержал ' + result.winner + '!!!'
+    }
+    setTimeout(() => {
+        document.location.href = document.location.href.split('/game')[0]
+    }, 10000)
+})
+
+socket.on('changefigure', (data) => {
+    SCHOSEN.figure = data.figure
+    SCHOSEN.cell = data.cell
+    draw_current_figure()
 })
 
 $(document).ready(() => {

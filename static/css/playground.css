@@ -9,6 +9,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-around;
+    text-align: center;
+    font-family: etna;
+    font-size: 50;
 }
 
 #left-panel {

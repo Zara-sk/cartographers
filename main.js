@@ -15,10 +15,25 @@ var players = []
 // 1 - загрузка игры, инициализация (10 секунд)
 // 2 - игра
 // 3 - конец игры => перезагрузка
-var GAME_PARAMS = {phase: 0}
+var GAME_PARAMS = {phase: 0, idInterval: -1}
 
 // регулярочка
 name_test = new RegExp('^[A-Za-z ]{3,20}$')
+
+const VILLAGE_CELL_TYPE  = "cell-village"
+const FIELD_CELL_TYPE    = "cell-field"
+const MONSTER_CELL_TYPE  = "cell-monster"
+const MOUNTAIN_CELL_TYPE = "cell-mountain"
+const FOREST_CELL_TYPE   = "cell-forest"
+const SEA_CELL_TYPE      = "cell-sea"
+const APROVED_CELL_TYPES = [VILLAGE_CELL_TYPE, FIELD_CELL_TYPE, FOREST_CELL_TYPE, SEA_CELL_TYPE]
+
+const POINT_FIGURE_TYPE  = []
+const CROSS_FIGURE_TYPE  = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+const ANGLE_FIGURE_TYPE  = [[-1, 0], [0, -1]]
+const LINE_FIGURE_TYPE   = [[-1, 0], [1, 0]]
+const SQUARE_FIGURE_TYPE = [[-1, 0], [-1, -1], [0, -1]]
+const ALL_FIGURES = [POINT_FIGURE_TYPE, CROSS_FIGURE_TYPE, ANGLE_FIGURE_TYPE, LINE_FIGURE_TYPE, SQUARE_FIGURE_TYPE]
 
 
 class Awaiter {
@@ -218,6 +233,7 @@ io.on('connection', (socket) => {
             // console.log('game ' + GAME_PARAMS.phase)
 
             var test_result = (name_test.test(name)) && (!contains(names, name))
+            if (players.length > 0) { test_result = false }
             if (test_result) {
                 awaiters.forEach((el) => {
                     if (el.socketID == socket.id) {
@@ -230,7 +246,7 @@ io.on('connection', (socket) => {
 
             if (Awaiter.named_awaiters_count() == 2) {
                 GAME_PARAMS.phase = 1
-                Countdown(1)
+                Countdown(10)
             }
 
         })
@@ -249,6 +265,8 @@ io.on('connection', (socket) => {
             if (Player.connectedCount() == 2) {
                 // Когда оба присоеденились, начинаем вечеринку!
                 Player.emitStartInfo()
+                changeFigure()
+                gameInterval()
             }
         })
 
@@ -257,7 +275,9 @@ io.on('connection', (socket) => {
         })
 
         socket.on('upscore', (number) => {
+            gameInterval()
             Player.upscore(socket.id, number)
+            changeFigure()
         })
     }
 
@@ -291,7 +311,61 @@ function startGame() {
             name: el.name
         })
     })
+}
 
+function gameInterval() {
+
+    var idInterval = GAME_PARAMS.idInterval
+    if (idInterval != -1) {clearTimeout(idInterval)}
+
+    idInterval = setTimeout(() => {
+        endGame()
+    }, 10000)
+    GAME_PARAMS.idInterval = idInterval
+}
+
+function endGame() {
+    endGame()
+}
+
+// на этом месте бобик сел, самоосуждаюсь
+function endGame() {
+
+    GAME_PARAMS.phase = 4
+
+    var result = {}
+
+    if (players[0].score == players[1].score) {
+        result.result = 'draw'
+    }
+
+    else {
+        result.result = 'win',
+        maxim = Math.max(players[0].score, players[1].score)
+        players.forEach((el) => {
+            if (el.score == maxim) {result.winner = el.name}
+        })
+    }
+
+    players.forEach((el) => {
+        io.to(el.socketID).emit('endgame', result)
+    })
+    setTimeout(() => {
+        players.pop()
+        players.pop()
+        GAME_PARAMS.phase = 0
+    }, 10000)
+}
+
+function changeFigure() {
+    var new_figure = ALL_FIGURES[Math.floor(Math.random()*ALL_FIGURES.length)]
+    var new_type_cell = APROVED_CELL_TYPES[Math.floor(Math.random()*APROVED_CELL_TYPES.length)]
+    players.forEach((el) => {
+        io.to(el.socketID).emit('changefigure', {
+            figure: new_figure,
+            cell: new_type_cell
+        })
+    })
 }
 
 http.listen(8000, () => {

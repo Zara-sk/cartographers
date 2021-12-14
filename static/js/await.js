@@ -21,6 +21,7 @@ socket.on('actualInfo', (data) => {
 socket.on('approveName', (result) => {
     console.log(result)
     if (result) {
+        nickObj.style.backgroundColor = '#eee'
         nickObj.readOnly = true
         submitObj.style.opacity = 0
         setTimeout(() => {
